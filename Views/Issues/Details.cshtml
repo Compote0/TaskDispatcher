@@ -1,0 +1,122 @@
+@model WebDispatcher.Models.Issue
+@using WebDispatcher.Models
+@{
+    ViewData["Title"] = Model.Project.Key + "-" + Model.IssueNumber;
+
+    var priorityColors = new Dictionary<IssuePriority, string>
+    {
+        [IssuePriority.Low]      = "secondary",
+        [IssuePriority.Medium]   = "warning",
+        [IssuePriority.High]     = "danger",
+        [IssuePriority.Critical] = "dark",
+    };
+
+    var statusColors = new Dictionary<IssueStatus, string>
+    {
+        [IssueStatus.Backlog]    = "secondary",
+        [IssueStatus.Todo]       = "primary",
+        [IssueStatus.InProgress] = "info",
+        [IssueStatus.InReview]   = "warning",
+        [IssueStatus.Done]       = "success",
+    };
+}
+
+<div class="mb-3">
+    <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId"
+       class="text-muted text-decoration-none small">← @Model.Project.Name Board</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-@statusColors[Model.Status]">@Model.Status</span>
+            <span class="text-muted small">@Model.Project.Key-@Model.IssueNumber</span>
+        </div>
+        <h2 class="mb-3">@Model.Title</h2>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted mb-2">Description</h6>
+                    <p class="mb-0" style="white-space: pre-wrap">@Model.Description</p>
+                </div>
+            </div>
+        }
+
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                  onsubmit="return confirm('Delete this issue?')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-muted text-uppercase small mb-3">Details</h6>
+
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted fw-normal">Status</dt>
+                    <dd class="col-7">
+                        <form asp-controller="Issues" asp-action="UpdateStatus" asp-route-id="@Model.Id"
+                              method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <select name="status" class="form-select form-select-sm"
+                                    onchange="this.form.submit()">
+                                @foreach (var s in Enum.GetValues<IssueStatus>())
+                                {
+                                    <option value="@s" selected="@(s == Model.Status)">@s</option>
+                                }
+                            </select>
+                        </form>
+                    </dd>
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Priority</dt>
+                    <dd class="col-7 mt-2">
+                        <span class="badge bg-@priorityColors[Model.Priority]">@Model.Priority</span>
+                    </dd>
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Type</dt>
+                    <dd class="col-7 mt-2">@Model.Type</dd>
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Assignee</dt>
+                    <dd class="col-7 mt-2">
+                        @if (Model.Assignee != null)
+                        {
+                            <span class="avatar-circle me-1">@Model.Assignee.UserName![0].ToString().ToUpper()</span>
+                            @Model.Assignee.UserName
+                        }
+                        else
+                        {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </dd>
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Reporter</dt>
+                    <dd class="col-7 mt-2">@(Model.Reporter?.UserName ?? "—")</dd>
+
+                    @if (Model.DueDate.HasValue)
+                    {
+                        var overdue = Model.DueDate < DateTime.UtcNow && Model.Status != IssueStatus.Done;
+                        <dt class="col-5 text-muted fw-normal mt-2">Due Date</dt>
+                        <dd class="col-7 mt-2 @(overdue ? "text-danger fw-semibold" : "")">
+                            @Model.DueDate.Value.ToString("MMM d, yyyy")
+                            @if (overdue) { <span class="badge bg-danger ms-1">Overdue</span> }
+                        </dd>
+                    }
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Created</dt>
+                    <dd class="col-7 mt-2 text-muted">@Model.CreatedAt.ToString("MMM d, yyyy")</dd>
+
+                    <dt class="col-5 text-muted fw-normal mt-2">Updated</dt>
+                    <dd class="col-7 mt-2 text-muted">@Model.UpdatedAt.ToString("MMM d, yyyy")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

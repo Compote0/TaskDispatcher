@@ -1,0 +1,94 @@
+@model WebDispatcher.Models.Project
+@using WebDispatcher.Models
+@{
+    ViewData["Title"] = Model.Name + " — Board";
+    var statuses = Enum.GetValues<IssueStatus>();
+    var board = statuses.ToDictionary(s => s, s => Model.Issues.Where(i => i.Status == s).OrderBy(i => i.IssueNumber).ToList());
+
+    var statusColors = new Dictionary<IssueStatus, string>
+    {
+        [IssueStatus.Backlog]    = "secondary",
+        [IssueStatus.Todo]       = "primary",
+        [IssueStatus.InProgress] = "info",
+        [IssueStatus.InReview]   = "warning",
+        [IssueStatus.Done]       = "success",
+    };
+
+    var priorityColors = new Dictionary<IssuePriority, string>
+    {
+        [IssuePriority.Low]      = "secondary",
+        [IssuePriority.Medium]   = "warning",
+        [IssuePriority.High]     = "danger",
+        [IssuePriority.Critical] = "dark",
+    };
+
+    var typeIcons = new Dictionary<IssueType, string>
+    {
+        [IssueType.Task]    = "☑",
+        [IssueType.Bug]     = "⚠",
+        [IssueType.Feature] = "★",
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a asp-action="Index" class="text-muted text-decoration-none small">← Projects</a>
+        <h2 class="mb-0">
+            @Model.Name
+            <span class="text-muted fs-6 fw-normal">@Model.Key</span>
+        </h2>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Issues" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-primary btn-sm">+ Create Issue</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">Edit Project</a>
+    </div>
+</div>
+
+<div class="d-flex gap-3 overflow-auto pb-4 board-container">
+    @foreach (var status in statuses)
+    {
+        var issues = board[status];
+        var color = statusColors[status];
+        <div class="board-column flex-shrink-0">
+            <div class="d-flex align-items-center mb-3 px-1">
+                <span class="badge bg-@color me-2">@issues.Count</span>
+                <strong class="text-uppercase small text-muted letter-spacing">@status</strong>
+            </div>
+            <div>
+                @foreach (var issue in issues)
+                {
+                    <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                       class="text-decoration-none text-dark d-block mb-2">
+                        <div class="issue-card p-3 rounded border bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-muted small">@Model.Key-@issue.IssueNumber</span>
+                                <span class="badge bg-@priorityColors[issue.Priority]">@issue.Priority</span>
+                            </div>
+                            <p class="mb-2 fw-medium small lh-sm">@issue.Title</p>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted" title="@issue.Type">@typeIcons[issue.Type]</span>
+                                @if (issue.Assignee != null)
+                                {
+                                    <span class="avatar-circle" title="@issue.Assignee.UserName">
+                                        @(issue.Assignee.UserName![0].ToString().ToUpper())
+                                    </span>
+                                }
+                                @if (issue.DueDate.HasValue)
+                                {
+                                    var overdue = issue.DueDate < DateTime.UtcNow && issue.Status != IssueStatus.Done;
+                                    <span class="ms-auto small @(overdue ? "text-danger fw-semibold" : "text-muted")">
+                                        @issue.DueDate.Value.ToString("MMM d")
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+                <a asp-controller="Issues" asp-action="Create" asp-route-projectId="@Model.Id"
+                   class="btn btn-light btn-sm w-100 text-muted border-dashed mt-1 small">
+                    + Add issue
+                </a>
+            </div>
+        </div>
+    }
+</div>

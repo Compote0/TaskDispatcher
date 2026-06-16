@@ -1,0 +1,73 @@
+@model IEnumerable<WebDispatcher.Models.Project>
+@using WebDispatcher.Models
+@{
+    ViewData["Title"] = "Projects";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Projects</h2>
+    <a asp-action="Create" class="btn btn-primary">+ New Project</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <h4>No projects yet</h4>
+        <p>Create your first project to get started.</p>
+        <a asp-action="Create" class="btn btn-primary mt-2">Create Project</a>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var project in Model)
+        {
+            var done = project.Issues.Count(i => i.Status == IssueStatus.Done);
+            var total = project.Issues.Count;
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-secondary mb-1">@project.Key</span>
+                                <h5 class="card-title mb-1">
+                                    <a asp-action="Details" asp-route-id="@project.Id" class="text-decoration-none stretched-link">@project.Name</a>
+                                </h5>
+                            </div>
+                            <div class="dropdown position-relative" style="z-index:1">
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">⋯</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@project.Id">Edit</a></li>
+                                    <li>
+                                        <form asp-action="Delete" asp-route-id="@project.Id" method="post"
+                                              onsubmit="return confirm('Delete this project and all its issues?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(project.Description))
+                        {
+                            <p class="card-text text-muted small mt-1">@project.Description</p>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        @if (total > 0)
+                        {
+                            <div class="progress mb-1" style="height:4px">
+                                <div class="progress-bar bg-success" style="width:@(done * 100 / total)%"></div>
+                            </div>
+                        }
+                        <div class="d-flex gap-3 small text-muted">
+                            <span>@total issues</span>
+                            <span>@done done</span>
+                            <span class="ms-auto">@project.CreatedAt.ToString("MMM yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
