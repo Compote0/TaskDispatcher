@@ -30,26 +30,73 @@ body {
   text-align: start;
 }
 
-/* Board */
+/* ── Theme toggle ── */
+#theme-toggle {
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Board ── */
 .board-container {
-  min-height: 60vh;
+  min-height: 65vh;
 }
 
 .board-column {
-  min-width: 265px;
-  max-width: 280px;
+  min-width: 272px;
+  max-width: 290px;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .issue-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.15s, transform 0.1s;
+  border: 1px solid var(--bs-border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  transition: box-shadow 0.15s, transform 0.12s;
 }
 
 .issue-card:hover {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.13);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.13);
+  transform: translateY(-2px);
 }
 
+.type-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.type-task    { background: rgba(13, 110, 253, 0.12); color: #0d6efd; }
+.type-bug     { background: rgba(220, 53, 69, 0.12);  color: #dc3545; }
+.type-feature { background: rgba(25, 135, 84, 0.12);  color: #198754; }
+
+[data-bs-theme="dark"] .type-task    { background: rgba(13, 110, 253, 0.25); color: #6ea8fe; }
+[data-bs-theme="dark"] .type-bug     { background: rgba(220, 53, 69, 0.25);  color: #ea868f; }
+[data-bs-theme="dark"] .type-feature { background: rgba(25, 135, 84, 0.25);  color: #75b798; }
+
+.add-issue-btn {
+  border: 1.5px dashed var(--bs-border-color);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.add-issue-btn:hover {
+  background: var(--bs-border-color) !important;
+  border-color: transparent;
+}
+
+/* ── Avatar ── */
 .avatar-circle {
   display: inline-flex;
   align-items: center;
@@ -59,15 +106,12 @@ body {
   border-radius: 50%;
   background: #6366f1;
   color: white;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
-.border-dashed {
-  border-style: dashed !important;
-}
-
+/* ── Misc ── */
 .letter-spacing {
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
