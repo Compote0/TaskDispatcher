@@ -8,6 +8,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Issue> Issues => Set<Issue>();
+    public DbSet<IssueActivity> IssueActivities => Set<IssueActivity>();
+    public DbSet<Sprint> Sprints => Set<Sprint>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -34,5 +36,23 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(i => i.ReporterId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Project>()
+            .HasMany(p => p.Sprints)
+            .WithOne(s => s.Project)
+            .HasForeignKey(s => s.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<IssueActivity>()
+            .HasOne(a => a.Issue)
+            .WithMany()
+            .HasForeignKey(a => a.IssueId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<IssueActivity>()
+            .HasOne(a => a.User)
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

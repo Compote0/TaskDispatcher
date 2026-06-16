@@ -1,0 +1,165 @@
+@model WebDispatcher.Models.DashboardViewModel
+@using WebDispatcher.Models
+@{
+    ViewData["Title"] = "Pour vous";
+    ViewData["FullWidth"] = true;
+
+    string ActivityLabel(IssueActivity a) => a.Type switch
+    {
+        ActivityType.Created => "Créé",
+        ActivityType.StatusChanged => $"Statut : {a.OldValue} → {a.NewValue}",
+        ActivityType.Assigned => "Assigné",
+        ActivityType.Updated => "Mis à jour",
+        _ => "Activité"
+    };
+
+    string GroupLabel(DateTime date)
+    {
+        var days = (DateTime.UtcNow - date).TotalDays;
+        if (days < 7) return "Cette semaine";
+        if (days < 30) return "Ce mois";
+        return "Plus ancien";
+    }
+
+    var grouped = Model.RecentActivity
+        .GroupBy(a => GroupLabel(a.CreatedAt))
+        .ToList();
+}
+
+<div class="dashboard-page">
+    <div class="dashboard-header mb-4">
+        <h1 class="dashboard-title">Pour vous</h1>
+    </div>
+
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-title">Espaces récents</h2>
+            <a asp-controller="Projects" asp-action="Index" class="section-link">Afficher tous les espaces</a>
+        </div>
+
+        @if (!Model.RecentProjects.Any())
+        {
+            <div class="empty-state">
+                <p class="mb-2">Aucun espace de travail pour le moment.</p>
+                <a asp-controller="Projects" asp-action="Create" class="btn btn-jira-primary btn-sm">Créer un espace</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var project in Model.RecentProjects)
+                {
+                    var open = project.Issues.Count(i => i.Status != IssueStatus.Done);
+                    var activeSprint = project.Sprints.FirstOrDefault(s => s.IsActive);
+                    <div class="col-md-6 col-xl-3">
+                        <div class="workspace-card">
+                            <div class="workspace-icon">@project.Key[0]</div>
+                            <div class="workspace-body">
+                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id"
+                                   class="workspace-name">@project.Name</a>
+                                <span class="workspace-meta">Logiciel géré par l'équipe</span>
+                                <div class="workspace-stats">
+                                    <span class="workspace-stat">
+                                        Mes tickets ouverts
+                                        <span class="badge bg-primary-subtle text-primary-emphasis">@open</span>
+                                    </span>
+                                    @if (activeSprint != null)
+                                    {
+                                        <span class="workspace-stat text-muted">Sprint : @activeSprint.Name</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <ul class="nav nav-tabs activity-tabs mb-3">
+                <li class="nav-item">
+                    <span class="nav-link active">Remaniés</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-link disabled">Assignés à moi
+                        @if (Model.OpenAssignedCount > 0)
+                        {
+                            <span class="badge rounded-pill bg-primary ms-1">@Model.OpenAssignedCount</span>
+                        }
+                    </span>
+                </li>
+            </ul>
+
+            @if (!Model.RecentActivity.Any())
+            {
+                <div class="empty-state">
+                    <p class="mb-0 text-muted">Aucune activité récente. Créez un ticket pour commencer.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var group in grouped)
+                {
+                    <h3 class="activity-group-label">@group.Key.ToUpperInvariant()</h3>
+                    <ul class="activity-list list-unstyled mb-4">
+                        @foreach (var activity in group)
+                        {
+                            var issue = activity.Issue;
+                            <li class="activity-item">
+                                <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                                   class="activity-link">
+                                    <span class="issue-type-icon issue-type-@issue.Type.ToString().ToLower()">✓</span>
+                                    <span class="activity-content">
+                                        <span class="activity-title">@issue.Title</span>
+                                        <span class="activity-meta">
+                                            @issue.Project.Key-@issue.IssueNumber · @issue.Project.Name
+                                        </span>
+                                    </span>
+                                    <span class="activity-action">@ActivityLabel(activity)</span>
+                                    <span class="avatar-circle" title="@activity.User.UserName">
+                                        @(activity.User.UserName?[0].ToString().ToUpper())
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sidebar-card">
+                <h3 class="sidebar-card-title">Assignés à moi</h3>
+                @if (!Model.AssignedIssues.Any())
+                {
+                    <p class="text-muted small mb-0">Aucun ticket ouvert assigné.</p>
+                }
+                else
+                {
+                    <ul class="assigned-list list-unstyled mb-0">
+                        @foreach (var issue in Model.AssignedIssues.Take(5))
+                        {
+                            <li>
+                                <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id">
+                                    <span class="assigned-key">@issue.Project.Key-@issue.IssueNumber</span>
+                                    <span class="assigned-title">@issue.Title</span>
+                                    <span class="badge status-badge status-@issue.Status.ToString().ToLower()">@issue.Status</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <div class="sidebar-card mt-3">
+                <h3 class="sidebar-card-title">Actions rapides</h3>
+                <div class="d-grid gap-2">
+                    <a asp-controller="Projects" asp-action="Create" class="btn btn-jira-primary btn-sm">+ Nouvel espace</a>
+                    <a asp-controller="Projects" asp-action="Index" class="btn btn-outline-secondary btn-sm">Voir les projets</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

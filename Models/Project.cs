@@ -18,4 +18,5 @@ public class Project
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Issue> Issues { get; set; } = [];
+    public ICollection<Sprint> Sprints { get; set; } = [];
 }

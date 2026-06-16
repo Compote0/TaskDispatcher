@@ -1,0 +1,42 @@
+@page
+@model WebDispatcher.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Inscription";
+}
+
+<h1 class="auth-title">Créer un compte</h1>
+<p class="auth-subtitle text-muted">Un compte pour gérer vos projets et tickets.</p>
+
+<form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="mt-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Email" class="form-label fw-semibold">E-mail *</label>
+        <input asp-for="Input.Email" class="form-control auth-input" autocomplete="username"
+               placeholder="Saisissez votre adresse e-mail"/>
+        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Password" class="form-label fw-semibold">Mot de passe *</label>
+        <input asp-for="Input.Password" class="form-control auth-input" autocomplete="new-password"
+               placeholder="Minimum 6 caractères"/>
+        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Input.ConfirmPassword" class="form-label fw-semibold">Confirmer *</label>
+        <input asp-for="Input.ConfirmPassword" class="form-control auth-input" autocomplete="new-password"/>
+        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+    </div>
+
+    <button type="submit" class="btn btn-jira-primary w-100 btn-lg">S'inscrire</button>
+</form>
+
+<div class="auth-links mt-4">
+    <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Déjà un compte ? Se connecter</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

@@ -1,0 +1,31 @@
+@page
+@model WebDispatcher.Areas.Identity.Pages.Account.Manage.DeletePersonalDataModel
+@{
+    ViewData["Title"] = "Supprimer le compte";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+}
+
+<h2 class="manage-section-title text-danger">Supprimer le compte</h2>
+
+<p class="text-muted">
+    Cette action est <strong>irréversible</strong>. Toutes vos données seront supprimées.
+</p>
+
+<form method="post" class="manage-form">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-4">
+        <label asp-for="Input.Password" class="form-label"></label>
+        <input asp-for="Input.Password" class="form-control" autocomplete="current-password"/>
+        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+        <a asp-page="./PersonalData" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

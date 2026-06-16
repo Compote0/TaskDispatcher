@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebDispatcher.Data;
 using WebDispatcher.Models;
+using WebDispatcher.Services;
 
 namespace WebDispatcher.Controllers;
 
@@ -40,7 +41,8 @@ public class IssuesController : Controller
     {
         if (ModelState.IsValid)
         {
-            issue.ReporterId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User)!;
+            issue.ReporterId = userId;
             issue.IssueNumber = await _context.Issues
                 .Where(i => i.ProjectId == issue.ProjectId)
                 .CountAsync() + 1;
@@ -48,6 +50,11 @@ public class IssuesController : Controller
             issue.UpdatedAt = DateTime.UtcNow;
             _context.Issues.Add(issue);
             await _context.SaveChangesAsync();
+
+            await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.Created);
+            if (issue.AssigneeId != null)
+                await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.Assigned, null, issue.AssigneeId);
+
             return RedirectToAction(nameof(Details), new { id = issue.Id });
         }
         await PopulateViewBagAsync(issue.ProjectId);
@@ -63,6 +70,13 @@ public class IssuesController : Controller
             .Include(i => i.Reporter)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (issue == null) return NotFound();
+
+        ViewBag.Activities = await _context.IssueActivities
+            .Include(a => a.User)
+            .Where(a => a.IssueId == id)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
         return View(issue);
     }
 
@@ -81,9 +95,23 @@ public class IssuesController : Controller
         if (id != issue.Id) return NotFound();
         if (ModelState.IsValid)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var existing = await _context.Issues.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+            if (existing == null) return NotFound();
+
             issue.UpdatedAt = DateTime.UtcNow;
             _context.Update(issue);
             await _context.SaveChangesAsync();
+
+            if (existing.Status != issue.Status)
+                await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.StatusChanged,
+                    existing.Status.ToString(), issue.Status.ToString());
+            if (existing.AssigneeId != issue.AssigneeId)
+                await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.Assigned,
+                    existing.AssigneeId, issue.AssigneeId);
+            else
+                await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.Updated);
+
             return RedirectToAction(nameof(Details), new { id = issue.Id });
         }
         await PopulateViewBagAsync(issue.ProjectId);
@@ -95,9 +123,17 @@ public class IssuesController : Controller
     {
         var issue = await _context.Issues.FindAsync(id);
         if (issue == null) return NotFound();
+
+        var userId = _userManager.GetUserId(User)!;
+        var oldStatus = issue.Status;
         issue.Status = status;
         issue.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (oldStatus != status)
+            await IssueActivityService.LogAsync(_context, issue.Id, userId, ActivityType.StatusChanged,
+                oldStatus.ToString(), status.ToString());
+
         return RedirectToAction("Details", "Projects", new { id = issue.ProjectId });
     }
 

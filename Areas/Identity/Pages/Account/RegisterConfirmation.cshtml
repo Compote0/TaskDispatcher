@@ -1,0 +1,15 @@
+@page
+@model WebDispatcher.Areas.Identity.Pages.Account.RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Vérifiez votre e-mail";
+}
+
+<h1 class="auth-title">Vérifiez votre e-mail</h1>
+<p class="auth-subtitle text-muted">
+    Un lien de confirmation a été envoyé à <strong>@Model.Email</strong>.
+    Cliquez dessus pour activer votre compte.
+</p>
+<p class="small text-muted">
+    En mode développement sans SMTP configuré, le lien apparaît dans la console du serveur.
+</p>
+<a asp-page="./Login" class="btn btn-outline-secondary w-100 mt-3">Retour à la connexion</a>

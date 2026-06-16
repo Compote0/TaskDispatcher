@@ -1,0 +1,20 @@
+@page
+@model WebDispatcher.Areas.Identity.Pages.Account.Manage.PersonalDataModel
+@{
+    ViewData["Title"] = "Données personnelles";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+}
+
+<h2 class="manage-section-title">Données personnelles</h2>
+
+<p class="text-muted">
+    Votre compte contient des données personnelles. Cette section permet de les gérer.
+</p>
+
+<div class="manage-danger-zone mt-4">
+    <h3 class="h6 text-danger">Zone sensible</h3>
+    <p class="small text-muted mb-3">
+        La suppression du compte est définitive et supprime toutes vos données associées.
+    </p>
+    <a asp-page="./DeletePersonalData" class="btn btn-outline-danger btn-sm">Supprimer mon compte</a>
+</div>

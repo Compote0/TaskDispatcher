@@ -1,0 +1,24 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["FullWidth"] = true;
+}
+
+<div class="manage-page">
+    <h1 class="manage-title">Mon compte</h1>
+    <p class="manage-subtitle text-muted">Gérez vos paramètres TaskDispatcher</p>
+
+    <div class="row g-4 mt-1">
+        <div class="col-md-3">
+            <partial name="_ManageNav"/>
+        </div>
+        <div class="col-md-9">
+            <div class="manage-content-card">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

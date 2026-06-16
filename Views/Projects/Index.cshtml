@@ -1,12 +1,13 @@
 @model IEnumerable<WebDispatcher.Models.Project>
 @using WebDispatcher.Models
 @{
-    ViewData["Title"] = "Projects";
+    ViewData["Title"] = "Espaces";
+    ViewData["FullWidth"] = true;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Projects</h2>
-    <a asp-action="Create" class="btn btn-primary">+ New Project</a>
+    <h2 class="mb-0">Espaces de travail</h2>
+    <a asp-action="Create" class="btn btn-jira-primary">+ Nouvel espace</a>
 </div>
 
 @if (!Model.Any())

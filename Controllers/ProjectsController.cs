@@ -28,6 +28,7 @@ public class ProjectsController : Controller
         var project = await _context.Projects
             .Include(p => p.Issues)
                 .ThenInclude(i => i.Assignee)
+            .Include(p => p.Sprints)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return NotFound();
         return View(project);

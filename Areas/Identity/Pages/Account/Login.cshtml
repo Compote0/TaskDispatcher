@@ -1,0 +1,40 @@
+@page
+@model WebDispatcher.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Connexion";
+}
+
+<h1 class="auth-title">Connectez-vous pour continuer</h1>
+
+<form id="account" method="post" class="mt-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Email" class="form-label fw-semibold">E-mail *</label>
+        <input asp-for="Input.Email" class="form-control auth-input" autocomplete="username"
+               placeholder="Saisissez votre adresse e-mail"/>
+        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Password" class="form-label fw-semibold">Mot de passe *</label>
+        <input asp-for="Input.Password" class="form-control auth-input" autocomplete="current-password"
+               placeholder="Saisissez votre mot de passe"/>
+        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="Input.RememberMe" class="form-check-input"/>
+        <label asp-for="Input.RememberMe" class="form-check-label">Mémoriser mes informations</label>
+    </div>
+
+    <button type="submit" class="btn btn-jira-primary w-100 btn-lg">Continuer</button>
+</form>
+
+<div class="auth-links mt-4">
+    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Créer un compte</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

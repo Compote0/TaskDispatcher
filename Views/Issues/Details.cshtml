@@ -2,6 +2,7 @@
 @using WebDispatcher.Models
 @{
     ViewData["Title"] = Model.Project.Key + "-" + Model.IssueNumber;
+    var activities = ViewBag.Activities as List<IssueActivity> ?? [];
 
     var priorityColors = new Dictionary<IssuePriority, string>
     {
@@ -120,3 +121,32 @@
         </div>
     </div>
 </div>
+
+@if (activities.Any())
+{
+    <div class="mt-4">
+        <h5 class="mb-3">Activité</h5>
+        <ul class="activity-list list-unstyled">
+            @foreach (var a in activities)
+            {
+                var label = a.Type switch
+                {
+                    ActivityType.Created => "a créé ce ticket",
+                    ActivityType.StatusChanged => $"a changé le statut ({a.OldValue} → {a.NewValue})",
+                    ActivityType.Assigned => "a modifié l'assignation",
+                    ActivityType.Updated => "a mis à jour le ticket",
+                    _ => "activité"
+                };
+                <li class="activity-item">
+                    <div class="activity-link" style="cursor:default">
+                        <span class="avatar-circle">@(a.User.UserName?[0].ToString().ToUpper())</span>
+                        <span class="activity-content">
+                            <span class="activity-title">@a.User.UserName @label</span>
+                            <span class="activity-meta">@a.CreatedAt.ToLocalTime().ToString("g")</span>
+                        </span>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+}
