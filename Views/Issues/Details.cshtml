@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = Model.Project.Key + "-" + Model.IssueNumber;
     var activities = ViewBag.Activities as List<IssueActivity> ?? [];
+    var comments = ViewBag.Comments as List<Comment> ?? [];
+    var currentUserId = ViewBag.CurrentUserId as string ?? "";
 
     var priorityColors = new Dictionary<IssuePriority, string>
     {
@@ -10,15 +12,6 @@
         [IssuePriority.Medium]   = "warning",
         [IssuePriority.High]     = "danger",
         [IssuePriority.Critical] = "dark",
-    };
-
-    var statusColors = new Dictionary<IssueStatus, string>
-    {
-        [IssueStatus.Backlog]    = "secondary",
-        [IssueStatus.Todo]       = "primary",
-        [IssueStatus.InProgress] = "info",
-        [IssueStatus.InReview]   = "warning",
-        [IssueStatus.Done]       = "success",
     };
 
     var headerPicker = new StatusPickerModel { IssueId = Model.Id, Status = Model.Status, Size = "md" };
@@ -49,20 +42,134 @@
             </div>
         }
 
-        <div class="d-flex gap-2">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+        <div class="d-flex gap-2 mb-5">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Modifier</a>
             <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                  onsubmit="return confirm('Delete this issue?')">
+                  onsubmit="return confirm('Supprimer ce ticket ?')">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
             </form>
         </div>
+
+        <div id="comments">
+            <h5 class="mb-3 d-flex align-items-center gap-2">
+                Commentaires
+                <span class="badge rounded-pill fw-normal" style="background:var(--jira-surface-raised);color:var(--jira-text-muted);border:1px solid var(--jira-border);font-size:.72rem">
+                    @comments.Count
+                </span>
+            </h5>
+
+            @if (comments.Any())
+            {
+                <div class="comment-list mb-4">
+                    @foreach (var comment in comments)
+                    {
+                        var isOwner = comment.AuthorId == currentUserId;
+                        <div class="comment-item" id="comment-@comment.Id">
+                            <div class="avatar-circle avatar-md flex-shrink-0" style="margin-top:2px">
+                                @(comment.Author.UserName?[0].ToString().ToUpper())
+                            </div>
+                            <div class="comment-body">
+                                <div class="comment-header">
+                                    <span class="comment-author">@comment.Author.UserName</span>
+                                    <span class="comment-time">@comment.CreatedAt.ToLocalTime().ToString("g")</span>
+                                    @if (comment.EditedAt.HasValue)
+                                    {
+                                        <span class="comment-edited">(modifié)</span>
+                                    }
+                                </div>
+
+                                <div id="comment-view-@comment.Id">
+                                    <p class="comment-content mb-1">@comment.Content</p>
+                                    @if (isOwner)
+                                    {
+                                        <div class="comment-actions">
+                                            <button type="button" class="comment-action-btn" onclick="editComment(@comment.Id)">Modifier</button>
+                                            <form asp-controller="Comments" asp-action="Delete" asp-route-id="@comment.Id"
+                                                  method="post" class="d-inline"
+                                                  onsubmit="return confirm('Supprimer ce commentaire ?')">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="comment-action-btn comment-action-danger">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (isOwner)
+                                {
+                                    <div id="comment-edit-@comment.Id" class="comment-edit-form">
+                                        <form asp-controller="Comments" asp-action="Edit" asp-route-id="@comment.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <textarea name="content" class="comment-textarea">@comment.Content</textarea>
+                                            <div class="d-flex gap-2 mt-2">
+                                                <button type="submit" class="btn btn-jira-primary btn-sm">Enregistrer</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelCommentEdit(@comment.Id)">Annuler</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="small mb-4" style="color:var(--jira-text-muted)">Aucun commentaire pour l'instant. Soyez le premier !</p>
+            }
+
+            <div class="add-comment-area">
+                <div class="d-flex gap-3">
+                    <div class="avatar-circle avatar-md flex-shrink-0" style="margin-top:2px">
+                        @(User.Identity?.Name?[0].ToString().ToUpper() ?? "?")
+                    </div>
+                    <form asp-controller="Comments" asp-action="Create" method="post" class="flex-grow-1" id="add-comment-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="issueId" value="@Model.Id" />
+                        <textarea name="content" class="add-comment-input" placeholder="Ajouter un commentaire..." rows="1"></textarea>
+                        <div class="comment-submit d-none mt-2">
+                            <button type="submit" class="btn btn-jira-primary btn-sm">Envoyer</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2 js-comment-cancel">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @if (activities.Any())
+        {
+            <div class="mt-5">
+                <h6 class="mb-3 text-uppercase small fw-semibold" style="color:var(--jira-text-muted);letter-spacing:.06em">Historique d'activité</h6>
+                <ul class="activity-list list-unstyled">
+                    @foreach (var a in activities)
+                    {
+                        var label = a.Type switch
+                        {
+                            ActivityType.Created      => "a créé ce ticket",
+                            ActivityType.StatusChanged => $"a changé le statut ({a.OldValue} → {a.NewValue})",
+                            ActivityType.Assigned     => "a modifié l'assignation",
+                            ActivityType.Updated      => "a mis à jour le ticket",
+                            _                         => "activité"
+                        };
+                        <li class="activity-item">
+                            <div class="activity-link" style="cursor:default">
+                                <span class="avatar-circle">@(a.User.UserName?[0].ToString().ToUpper())</span>
+                                <span class="activity-content">
+                                    <span class="activity-title">@a.User.UserName @label</span>
+                                    <span class="activity-meta">@a.CreatedAt.ToLocalTime().ToString("g")</span>
+                                </span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 
     <div class="col-lg-4 mt-4 mt-lg-0">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title text-muted text-uppercase small mb-3">Details</h6>
+                <h6 class="card-title text-muted text-uppercase small mb-3">Détails</h6>
 
                 <dl class="row small mb-0">
                     <dt class="col-5 text-muted fw-normal">Statut</dt>
@@ -70,7 +177,7 @@
                         <partial name="_StatusPicker" model="new StatusPickerModel { IssueId = Model.Id, Status = Model.Status }"/>
                     </dd>
 
-                    <dt class="col-5 text-muted fw-normal mt-2">Priority</dt>
+                    <dt class="col-5 text-muted fw-normal mt-2">Priorité</dt>
                     <dd class="col-7 mt-2">
                         <span class="badge bg-@priorityColors[Model.Priority]">@Model.Priority</span>
                     </dd>
@@ -78,7 +185,7 @@
                     <dt class="col-5 text-muted fw-normal mt-2">Type</dt>
                     <dd class="col-7 mt-2">@Model.Type</dd>
 
-                    <dt class="col-5 text-muted fw-normal mt-2">Assignee</dt>
+                    <dt class="col-5 text-muted fw-normal mt-2">Assigné à</dt>
                     <dd class="col-7 mt-2">
                         @if (Model.Assignee != null)
                         {
@@ -87,59 +194,30 @@
                         }
                         else
                         {
-                            <span class="text-muted">Unassigned</span>
+                            <span class="text-muted">Non assigné</span>
                         }
                     </dd>
 
-                    <dt class="col-5 text-muted fw-normal mt-2">Reporter</dt>
+                    <dt class="col-5 text-muted fw-normal mt-2">Rapporteur</dt>
                     <dd class="col-7 mt-2">@(Model.Reporter?.UserName ?? "—")</dd>
 
                     @if (Model.DueDate.HasValue)
                     {
                         var overdue = Model.DueDate < DateTime.UtcNow && Model.Status != IssueStatus.Done;
-                        <dt class="col-5 text-muted fw-normal mt-2">Due Date</dt>
+                        <dt class="col-5 text-muted fw-normal mt-2">Échéance</dt>
                         <dd class="col-7 mt-2 @(overdue ? "text-danger fw-semibold" : "")">
-                            @Model.DueDate.Value.ToString("MMM d, yyyy")
-                            @if (overdue) { <span class="badge bg-danger ms-1">Overdue</span> }
+                            @Model.DueDate.Value.ToString("d MMM yyyy")
+                            @if (overdue) { <span class="badge bg-danger ms-1">En retard</span> }
                         </dd>
                     }
 
-                    <dt class="col-5 text-muted fw-normal mt-2">Created</dt>
-                    <dd class="col-7 mt-2 text-muted">@Model.CreatedAt.ToString("MMM d, yyyy")</dd>
+                    <dt class="col-5 text-muted fw-normal mt-2">Créé</dt>
+                    <dd class="col-7 mt-2 text-muted">@Model.CreatedAt.ToString("d MMM yyyy")</dd>
 
-                    <dt class="col-5 text-muted fw-normal mt-2">Updated</dt>
-                    <dd class="col-7 mt-2 text-muted">@Model.UpdatedAt.ToString("MMM d, yyyy")</dd>
+                    <dt class="col-5 text-muted fw-normal mt-2">Modifié</dt>
+                    <dd class="col-7 mt-2 text-muted">@Model.UpdatedAt.ToString("d MMM yyyy")</dd>
                 </dl>
             </div>
         </div>
     </div>
 </div>
-
-@if (activities.Any())
-{
-    <div class="mt-4">
-        <h5 class="mb-3">Activité</h5>
-        <ul class="activity-list list-unstyled">
-            @foreach (var a in activities)
-            {
-                var label = a.Type switch
-                {
-                    ActivityType.Created => "a créé ce ticket",
-                    ActivityType.StatusChanged => $"a changé le statut ({a.OldValue} → {a.NewValue})",
-                    ActivityType.Assigned => "a modifié l'assignation",
-                    ActivityType.Updated => "a mis à jour le ticket",
-                    _ => "activité"
-                };
-                <li class="activity-item">
-                    <div class="activity-link" style="cursor:default">
-                        <span class="avatar-circle">@(a.User.UserName?[0].ToString().ToUpper())</span>
-                        <span class="activity-content">
-                            <span class="activity-title">@a.User.UserName @label</span>
-                            <span class="activity-meta">@a.CreatedAt.ToLocalTime().ToString("g")</span>
-                        </span>
-                    </div>
-                </li>
-            }
-        </ul>
-    </div>
-}

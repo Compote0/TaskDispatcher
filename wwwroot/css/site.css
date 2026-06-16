@@ -865,3 +865,134 @@ kbd {
 .dropdown-divider {
   border-color: var(--jira-border);
 }
+
+/* ── Comments ── */
+.comment-list {
+  border-top: 1px solid var(--jira-border);
+  padding-top: 1rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--jira-border);
+}
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--jira-text);
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: var(--jira-text-muted);
+}
+
+.comment-edited {
+  font-size: 0.7rem;
+  color: var(--jira-text-muted);
+  font-style: italic;
+}
+
+.comment-content {
+  font-size: 0.875rem;
+  color: var(--jira-text);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.comment-action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--jira-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.comment-action-btn:hover {
+  color: var(--jira-blue);
+}
+.comment-action-danger:hover {
+  color: #de350b;
+}
+
+.comment-edit-form {
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.comment-textarea {
+  width: 100%;
+  background: var(--jira-surface-raised);
+  border: 1px solid var(--jira-border);
+  border-radius: 6px;
+  color: var(--jira-text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+.comment-textarea:focus {
+  outline: none;
+  border-color: var(--jira-blue);
+  box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+}
+
+.add-comment-area {
+  padding: 1rem;
+  background: var(--jira-surface);
+  border: 1px solid var(--jira-border);
+  border-radius: 8px;
+}
+
+.add-comment-input {
+  width: 100%;
+  background: var(--jira-surface-raised);
+  border: 1px solid var(--jira-border);
+  border-radius: 6px;
+  color: var(--jira-text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.add-comment-input:focus {
+  outline: none;
+  border-color: var(--jira-blue);
+  box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+}
+.add-comment-input::placeholder {
+  color: var(--jira-text-muted);
+}

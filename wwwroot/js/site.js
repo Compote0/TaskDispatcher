@@ -287,6 +287,44 @@
   if (priorityFilter) priorityFilter.addEventListener("change", applyFilters);
   if (typeFilter) typeFilter.addEventListener("change", applyFilters);
 
+  // ── Inline comment editing ──
+  window.editComment = function (id) {
+    var view = document.getElementById("comment-view-" + id);
+    var form = document.getElementById("comment-edit-" + id);
+    if (!view || !form) return;
+    view.style.display = "none";
+    form.style.display = "block";
+    var ta = form.querySelector("textarea");
+    if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
+  };
+
+  window.cancelCommentEdit = function (id) {
+    var view = document.getElementById("comment-view-" + id);
+    var form = document.getElementById("comment-edit-" + id);
+    if (!view || !form) return;
+    view.style.display = "";
+    form.style.display = "none";
+  };
+
+  // ── Add-comment expand/collapse ──
+  var addCommentInput = document.querySelector(".add-comment-input");
+  var commentSubmit = document.querySelector(".comment-submit");
+  if (addCommentInput && commentSubmit) {
+    addCommentInput.addEventListener("focus", function () {
+      commentSubmit.classList.remove("d-none");
+      addCommentInput.rows = 3;
+    });
+    var cancelBtn = document.querySelector(".js-comment-cancel");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", function () {
+        addCommentInput.value = "";
+        addCommentInput.rows = 1;
+        commentSubmit.classList.add("d-none");
+        addCommentInput.blur();
+      });
+    }
+  }
+
   document.addEventListener("keydown", function (e) {
     var tag = document.activeElement ? document.activeElement.tagName : "";
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;

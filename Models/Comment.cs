@@ -1,11 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace WebDispatcher.Models;
 
-public enum ActivityType { Created, StatusChanged, Updated, Assigned, Commented }
-
-public class IssueActivity
+public class Comment
 {
     public int Id { get; set; }
     public int IssueId { get; set; }
@@ -13,13 +12,14 @@ public class IssueActivity
     [ValidateNever]
     public Issue Issue { get; set; } = null!;
 
-    public string UserId { get; set; } = "";
+    public string AuthorId { get; set; } = "";
 
     [ValidateNever]
-    public IdentityUser User { get; set; } = null!;
+    public IdentityUser Author { get; set; } = null!;
 
-    public ActivityType Type { get; set; }
-    public string? OldValue { get; set; }
-    public string? NewValue { get; set; }
+    [Required, MaxLength(5000)]
+    public string Content { get; set; } = "";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? EditedAt { get; set; }
 }

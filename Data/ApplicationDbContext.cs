@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Issue> Issues => Set<Issue>();
     public DbSet<IssueActivity> IssueActivities => Set<IssueActivity>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
+    public DbSet<Comment> Comments => Set<Comment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -53,6 +54,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(a => a.User)
             .WithMany()
             .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Comment>()
+            .HasOne(c => c.Issue)
+            .WithMany()
+            .HasForeignKey(c => c.IssueId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Comment>()
+            .HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.AuthorId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

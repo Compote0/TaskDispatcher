@@ -77,6 +77,14 @@ public class IssuesController : Controller
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
 
+        ViewBag.Comments = await _context.Comments
+            .Include(c => c.Author)
+            .Where(c => c.IssueId == id)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+
+        ViewBag.CurrentUserId = _userManager.GetUserId(User);
+
         return View(issue);
     }
 
