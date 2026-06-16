@@ -122,22 +122,22 @@
                          data-priority="@issue.Priority"
                          data-type="@issue.Type"
                          data-title="@issue.Title.ToLower()">
-                        <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
-                           class="text-decoration-none d-block" style="color:inherit">
-                            <div class="issue-card rounded-3 p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span style="font-size:11px;color:var(--jira-text-muted)">@Model.Key-@issue.IssueNumber</span>
-                                    <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
-                                </div>
+                        <div class="issue-card rounded-3 p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <partial name="_StatusPicker" model="new StatusPickerModel { IssueId = issue.Id, Status = issue.Status }"/>
+                                <span style="font-size:11px;color:var(--jira-text-muted);white-space:nowrap">@Model.Key-@issue.IssueNumber</span>
+                            </div>
+                            <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                               class="issue-card-link text-decoration-none d-block" style="color:inherit">
                                 <p class="mb-2 fw-medium lh-sm" style="font-size:13px;color:var(--jira-text)">@issue.Title</p>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="type-badge type-@issue.Type.ToString().ToLower()">@typeIcons[issue.Type] @issue.Type</span>
+                                    <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
                                     <div class="ms-auto d-flex align-items-center gap-1">
                                         @if (issue.DueDate.HasValue)
                                         {
                                             var overdue = issue.DueDate < DateTime.UtcNow && issue.Status != IssueStatus.Done;
                                             <span style="font-size:11px" class="@(overdue ? "text-danger fw-semibold" : "")">
-                                                @if (!overdue) { <span style="color:var(--jira-text-muted)"> </span> }
                                                 @issue.DueDate.Value.ToString("MMM d")
                                             </span>
                                         }
@@ -149,8 +149,8 @@
                                         }
                                     </div>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        </div>
                     </div>
                 }
 

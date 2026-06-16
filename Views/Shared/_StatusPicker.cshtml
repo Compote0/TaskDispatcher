@@ -1,0 +1,31 @@
+@model WebDispatcher.Models.StatusPickerModel
+@using WebDispatcher.Models
+
+<div class="status-picker dropdown status-picker-@Model.Size" data-issue-id="@Model.IssueId" data-status-num="@((int)Model.Status)">
+    <button type="button"
+            class="status-picker-btn dropdown-toggle"
+            data-bs-toggle="dropdown"
+            data-bs-auto-close="true"
+            aria-expanded="false">
+        <span class="status-dot" style="background:@IssueStatusHelper.GetColor(Model.Status)"></span>
+        <span class="status-picker-label">@IssueStatusHelper.GetLabel(Model.Status)</span>
+    </button>
+    <ul class="dropdown-menu status-picker-menu">
+        @foreach (var s in Enum.GetValues<IssueStatus>())
+        {
+            <li>
+                <button type="button"
+                        class="dropdown-item status-picker-option @IssueStatusHelper.GetCssClass(s) @(s == Model.Status ? "active" : "")"
+                        data-issue-id="@Model.IssueId"
+                        data-status-num="@((int)s)">
+                    <span class="status-dot" style="background:@IssueStatusHelper.GetColor(s)"></span>
+                    @IssueStatusHelper.GetLabel(s)
+                    @if (s == Model.Status)
+                    {
+                        <span class="status-picker-check ms-auto">✓</span>
+                    }
+                </button>
+            </li>
+        }
+    </ul>
+</div>

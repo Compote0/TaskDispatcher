@@ -20,6 +20,8 @@
     };
 }
 
+@Html.AntiForgeryToken()
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0" style="color:var(--jira-text)">🎯 Mes tickets</h2>
     <span class="small" style="color:var(--jira-text-muted)">
@@ -56,29 +58,31 @@ else
             <div class="sidebar-card p-0 overflow-hidden">
                 @foreach (var issue in group.OrderBy(i => i.Status).ThenBy(i => i.Priority))
                 {
-                    <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
-                       class="activity-link">
-                        <span class="status-dot flex-shrink-0" style="background:@statusDot[issue.Status]"></span>
-                        <div class="activity-content">
-                            <span class="activity-title" style="color:var(--jira-text)">@issue.Title</span>
-                            <span class="activity-meta">
-                                @group.Key.Key-@issue.IssueNumber &nbsp;·&nbsp; @issue.Type &nbsp;·&nbsp;
-                                @if (issue.DueDate.HasValue)
-                                {
-                                    var overdue = issue.DueDate < DateTime.UtcNow;
-                                    <span class="@(overdue ? "text-danger" : "")">
-                                        Échéance @issue.DueDate.Value.ToString("d MMM")
-                                        @if (overdue) { <span>⚠</span> }
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span>Pas d'échéance</span>
-                                }
-                            </span>
-                        </div>
+                    <div class="activity-link mine-issue-row">
+                        <partial name="_StatusPicker" model="new StatusPickerModel { IssueId = issue.Id, Status = issue.Status }"/>
+                        <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                           class="mine-issue-link flex-grow-1 text-decoration-none" style="color:inherit">
+                            <div class="activity-content">
+                                <span class="activity-title" style="color:var(--jira-text)">@issue.Title</span>
+                                <span class="activity-meta">
+                                    @group.Key.Key-@issue.IssueNumber &nbsp;·&nbsp; @issue.Type &nbsp;·&nbsp;
+                                    @if (issue.DueDate.HasValue)
+                                    {
+                                        var overdue = issue.DueDate < DateTime.UtcNow;
+                                        <span class="@(overdue ? "text-danger" : "")">
+                                            Échéance @issue.DueDate.Value.ToString("d MMM")
+                                            @if (overdue) { <span>⚠</span> }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>Pas d'échéance</span>
+                                    }
+                                </span>
+                            </div>
+                        </a>
                         <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
-                    </a>
+                    </div>
                 }
             </div>
         </div>

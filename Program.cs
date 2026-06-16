@@ -27,6 +27,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
 
 var app = builder.Build();
 

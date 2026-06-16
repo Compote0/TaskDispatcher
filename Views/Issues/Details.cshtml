@@ -20,7 +20,11 @@
         [IssueStatus.InReview]   = "warning",
         [IssueStatus.Done]       = "success",
     };
+
+    var headerPicker = new StatusPickerModel { IssueId = Model.Id, Status = Model.Status, Size = "md" };
 }
+
+@Html.AntiForgeryToken()
 
 <div class="mb-3">
     <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectId"
@@ -29,8 +33,8 @@
 
 <div class="row">
     <div class="col-lg-8">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-@statusColors[Model.Status]">@Model.Status</span>
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+            <partial name="_StatusPicker" model="headerPicker"/>
             <span class="text-muted small">@Model.Project.Key-@Model.IssueNumber</span>
         </div>
         <h2 class="mb-3">@Model.Title</h2>
@@ -61,20 +65,9 @@
                 <h6 class="card-title text-muted text-uppercase small mb-3">Details</h6>
 
                 <dl class="row small mb-0">
-                    <dt class="col-5 text-muted fw-normal">Status</dt>
+                    <dt class="col-5 text-muted fw-normal">Statut</dt>
                     <dd class="col-7">
-                        <form asp-controller="Issues" asp-action="UpdateStatus" asp-route-id="@Model.Id"
-                              method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <select name="status" class="form-select form-select-sm"
-                                    onchange="this.form.submit()">
-                                @foreach (var s in Enum.GetValues<IssueStatus>())
-                                {
-                                    <option value="@s" selected="@(s == Model.Status)">@s</option>
-                                }
-                            </select>
-                        </form>
+                        <partial name="_StatusPicker" model="new StatusPickerModel { IssueId = Model.Id, Status = Model.Status }"/>
                     </dd>
 
                     <dt class="col-5 text-muted fw-normal mt-2">Priority</dt>
