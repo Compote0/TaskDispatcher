@@ -1,0 +1,86 @@
+@model IEnumerable<WebDispatcher.Models.Issue>
+@using WebDispatcher.Models
+@{
+    ViewData["Title"] = "Mes tickets";
+    var grouped = Model.GroupBy(i => i.Project!).OrderBy(g => g.Key.Name).ToList();
+    var priorityColors = new Dictionary<IssuePriority, string>
+    {
+        [IssuePriority.Low]      = "secondary",
+        [IssuePriority.Medium]   = "warning",
+        [IssuePriority.High]     = "danger",
+        [IssuePriority.Critical] = "dark",
+    };
+    var statusDot = new Dictionary<IssueStatus, string>
+    {
+        [IssueStatus.Backlog]    = "#6c757d",
+        [IssueStatus.Todo]       = "#0052CC",
+        [IssueStatus.InProgress] = "#00B8D9",
+        [IssueStatus.InReview]   = "#FFAB00",
+        [IssueStatus.Done]       = "#36B37E",
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="color:var(--jira-text)">🎯 Mes tickets</h2>
+    <span class="small" style="color:var(--jira-text-muted)">
+        @Model.Count() ticket(s) en cours
+    </span>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <p style="color:var(--jira-text-muted)" class="mb-2">Aucun ticket ne vous est assigné pour le moment.</p>
+        <a asp-controller="Projects" asp-action="Index" class="btn btn-jira-primary btn-sm">Voir les projets</a>
+    </div>
+}
+else
+{
+    @foreach (var group in grouped)
+    {
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="workspace-icon" style="width:24px;height:24px;font-size:10px;border-radius:4px">
+                    @group.Key.Key.Substring(0, Math.Min(2, group.Key.Key.Length))
+                </div>
+                <a asp-controller="Projects" asp-action="Details" asp-route-id="@group.Key.Id"
+                   class="fw-semibold text-decoration-none" style="color:var(--jira-text)">
+                    @group.Key.Name
+                </a>
+                <span class="small" style="color:var(--jira-text-muted)">@group.Key.Key</span>
+                <span class="badge rounded-pill ms-1 fw-normal" style="background:var(--jira-surface-raised);color:var(--jira-text-muted);border:1px solid var(--jira-border)">
+                    @group.Count()
+                </span>
+            </div>
+
+            <div class="sidebar-card p-0 overflow-hidden">
+                @foreach (var issue in group.OrderBy(i => i.Status).ThenBy(i => i.Priority))
+                {
+                    <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                       class="activity-link">
+                        <span class="status-dot flex-shrink-0" style="background:@statusDot[issue.Status]"></span>
+                        <div class="activity-content">
+                            <span class="activity-title" style="color:var(--jira-text)">@issue.Title</span>
+                            <span class="activity-meta">
+                                @group.Key.Key-@issue.IssueNumber &nbsp;·&nbsp; @issue.Type &nbsp;·&nbsp;
+                                @if (issue.DueDate.HasValue)
+                                {
+                                    var overdue = issue.DueDate < DateTime.UtcNow;
+                                    <span class="@(overdue ? "text-danger" : "")">
+                                        Échéance @issue.DueDate.Value.ToString("d MMM")
+                                        @if (overdue) { <span>⚠</span> }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Pas d'échéance</span>
+                                }
+                            </span>
+                        </div>
+                        <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+}

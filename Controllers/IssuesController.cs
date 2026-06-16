@@ -138,6 +138,37 @@ public class IssuesController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> MoveStatus([FromBody] MoveStatusDto dto)
+    {
+        var issue = await _context.Issues.FindAsync(dto.Id);
+        if (issue == null) return NotFound();
+
+        var userId = _userManager.GetUserId(User)!;
+        var oldStatus = issue.Status;
+        issue.Status = dto.Status;
+        issue.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        if (oldStatus != dto.Status)
+            await IssueActivityService.LogAsync(_context, issue.Id, userId,
+                ActivityType.StatusChanged, oldStatus.ToString(), dto.Status.ToString());
+
+        return Ok(new { success = true });
+    }
+
+    public async Task<IActionResult> Mine()
+    {
+        var userId = _userManager.GetUserId(User);
+        var issues = await _context.Issues
+            .Include(i => i.Project)
+            .Where(i => i.AssigneeId == userId && i.Status != IssueStatus.Done)
+            .OrderBy(i => i.Priority)
+            .ThenByDescending(i => i.UpdatedAt)
+            .ToListAsync();
+        return View(issues);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         var issue = await _context.Issues.FindAsync(id);
@@ -148,3 +179,5 @@ public class IssuesController : Controller
         return RedirectToAction("Details", "Projects", new { id = projectId });
     }
 }
+
+public record MoveStatusDto(int Id, IssueStatus Status);

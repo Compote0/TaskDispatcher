@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="~/WebDispatcher.styles.css" asp-append-version="true"/>
 </head>
 <body class="app-body">
+
+<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999"></div>
+
 <header class="jira-header">
     <nav class="jira-nav">
         <div class="jira-nav-left">
@@ -27,8 +30,8 @@
             </a>
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <form class="jira-search d-none d-md-flex" asp-controller="Projects" asp-action="Index" method="get">
-                    <input type="search" name="q" class="jira-search-input" placeholder="Rechercher"/>
+                <form class="d-none d-md-flex" asp-controller="Projects" asp-action="Index" method="get">
+                    <input type="search" name="q" class="jira-search-input" placeholder="🔍  Rechercher..."/>
                 </form>
             }
         </div>
@@ -38,6 +41,32 @@
             <ul class="jira-nav-links d-none d-lg-flex">
                 <li><a asp-controller="Home" asp-action="Index" class="jira-nav-link">Pour vous</a></li>
                 <li><a asp-controller="Projects" asp-action="Index" class="jira-nav-link">Espaces</a></li>
+                <li class="dropdown">
+                    <button class="jira-nav-link border-0 bg-transparent dropdown-toggle d-flex align-items-center gap-1"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        Tableau
+                    </button>
+                    <ul class="dropdown-menu" style="min-width:220px">
+                        <li><h6 class="dropdown-header small">Navigation rapide</h6></li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="Issues" asp-action="Mine">
+                                <span class="me-2">🎯</span> Mes tickets
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="Projects" asp-action="Index">
+                                <span class="me-2">📋</span> Tous les espaces
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header small">Raccourcis</h6></li>
+                        <li>
+                            <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#shortcutsModal">
+                                <span class="me-2">⌨</span> Raccourcis clavier <kbd class="ms-1">?</kbd>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
             </ul>
         }
 
@@ -55,6 +84,40 @@
 <main class="@(ViewData["FullWidth"] != null ? "app-main-full" : "app-main")">
     @RenderBody()
 </main>
+
+<!-- Keyboard shortcuts modal -->
+<div class="modal fade" id="shortcutsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content" style="background:var(--jira-surface);border-color:var(--jira-border)">
+            <div class="modal-header border-0 pb-1">
+                <h6 class="modal-title fw-bold" style="color:var(--jira-text)">⌨ Raccourcis clavier</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(0.6)"></button>
+            </div>
+            <div class="modal-body pt-1">
+                <table class="table table-sm mb-0" style="color:var(--jira-text)">
+                    <tbody>
+                        <tr>
+                            <td><kbd>C</kbd></td>
+                            <td style="color:var(--jira-text-muted)">Créer un ticket</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>/</kbd></td>
+                            <td style="color:var(--jira-text-muted)">Focus la recherche</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Esc</kbd></td>
+                            <td style="color:var(--jira-text-muted)">Effacer les filtres</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>?</kbd></td>
+                            <td style="color:var(--jira-text-muted)">Ces raccourcis</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

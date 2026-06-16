@@ -15,7 +15,6 @@
         [IssueStatus.InReview]   = "#FFAB00",
         [IssueStatus.Done]       = "#36B37E",
     };
-
     var priorityColors = new Dictionary<IssuePriority, string>
     {
         [IssuePriority.Low]      = "secondary",
@@ -23,7 +22,6 @@
         [IssuePriority.High]     = "danger",
         [IssuePriority.Critical] = "dark",
     };
-
     var typeIcons = new Dictionary<IssueType, string>
     {
         [IssueType.Task]    = "☑",
@@ -32,37 +30,36 @@
     };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+@Html.AntiForgeryToken()
+
+<div class="d-flex justify-content-between align-items-center mb-3"
+     data-create-url="@Url.Action("Create", "Issues", new { projectId = Model.Id })">
     <div>
-        <a asp-action="Index" class="text-muted text-decoration-none small">← Espaces</a>
-        <h2 class="mb-0 mt-1">
+        <a asp-action="Index" class="text-decoration-none small" style="color:var(--jira-text-muted)">← Espaces</a>
+        <h2 class="mb-0 mt-1" style="color:var(--jira-text)">
             @Model.Name
-            <span class="text-muted fs-6 fw-normal ms-1">@Model.Key</span>
+            <span style="color:var(--jira-text-muted);font-size:.9rem;font-weight:400" class="ms-1">@Model.Key</span>
         </h2>
     </div>
     <div class="d-flex gap-2">
         <a asp-controller="Issues" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-jira-primary btn-sm px-3">+ Créer un ticket</a>
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">Modifier</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary">Modifier</a>
     </div>
 </div>
 
-<div class="sprint-panel">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="mb-0 fw-semibold">Sprints</h6>
-        <a asp-controller="Sprints" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-sm btn-outline-secondary">+ Nouveau sprint</a>
-    </div>
-    @if (!Model.Sprints.Any())
-    {
-        <p class="text-muted small mb-0">Aucun sprint. Créez-en un pour planifier vos itérations.</p>
-    }
-    else
-    {
+@if (Model.Sprints.Any())
+{
+    <div class="sprint-panel mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 fw-semibold">Sprints</h6>
+            <a asp-controller="Sprints" asp-action="Create" asp-route-projectId="@Model.Id" class="btn btn-sm btn-outline-secondary">+ Nouveau</a>
+        </div>
         <div class="d-flex flex-wrap gap-2">
             @foreach (var sprint in Model.Sprints.OrderByDescending(s => s.IsActive).ThenByDescending(s => s.StartDate))
             {
-                <div class="d-flex align-items-center gap-2 border rounded px-3 py-2" style="border-color:var(--jira-border)!important">
+                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:var(--jira-surface-raised);border:1px solid var(--jira-border)">
                     <span class="fw-medium small">@sprint.Name</span>
-                    <span class="text-muted small">@sprint.StartDate.ToString("d MMM") – @sprint.EndDate.ToString("d MMM")</span>
+                    <span class="small" style="color:var(--jira-text-muted)">@sprint.StartDate.ToString("d MMM") – @sprint.EndDate.ToString("d MMM")</span>
                     @if (sprint.IsActive)
                     {
                         <span class="badge sprint-badge-active">Actif</span>
@@ -71,17 +68,34 @@
                     {
                         <form asp-controller="Sprints" asp-action="Activate" asp-route-id="@sprint.Id" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-link btn-sm p-0">Activer</button>
+                            <button type="submit" class="btn btn-link btn-sm p-0" style="color:var(--jira-blue)">Activer</button>
                         </form>
                     }
                 </div>
             }
         </div>
-        @if (activeSprint != null)
+    </div>
+}
+
+<div class="board-filters d-flex gap-2 align-items-center flex-wrap mb-3">
+    <input type="search" id="board-search" class="board-filter-input" placeholder="🔍  Filtrer les tickets...">
+    <select id="board-priority" class="board-filter-select">
+        <option value="">Toutes priorités</option>
+        @foreach (var p in Enum.GetValues<IssuePriority>())
         {
-            <p class="text-muted small mt-2 mb-0">Sprint actif : <strong>@activeSprint.Name</strong></p>
+            <option value="@p">@p</option>
         }
-    }
+    </select>
+    <select id="board-type" class="board-filter-select">
+        <option value="">Tous les types</option>
+        @foreach (var t in Enum.GetValues<IssueType>())
+        {
+            <option value="@t">@t</option>
+        }
+    </select>
+    <span class="ms-auto small" style="color:var(--jira-text-muted)">
+        <kbd>C</kbd> créer &nbsp;·&nbsp; <kbd>Esc</kbd> effacer &nbsp;·&nbsp; <kbd>?</kbd> aide
+    </span>
 </div>
 
 <div class="d-flex gap-3 overflow-auto pb-4 board-container align-items-start">
@@ -89,50 +103,63 @@
     {
         var issues = board[status];
         var dot = statusDotColor[status];
-        <div class="board-column flex-shrink-0 bg-body-secondary rounded-3 p-2">
+        var statusNum = (int)status;
+        <div class="board-column flex-shrink-0 rounded-3 p-2" style="background:var(--jira-surface);border:1px solid var(--jira-border)">
 
             <div class="d-flex align-items-center gap-2 mb-3 px-1 pt-1">
                 <span class="status-dot" style="background:@dot"></span>
-                <span class="fw-semibold small text-uppercase letter-spacing">@status</span>
-                <span class="badge rounded-pill bg-body border text-body ms-auto fw-normal">@issues.Count</span>
+                <span class="fw-semibold small text-uppercase letter-spacing" style="color:var(--jira-text-muted)">@status</span>
+                <span class="col-count badge rounded-pill ms-auto fw-normal" style="background:var(--jira-surface-raised);color:var(--jira-text);border:1px solid var(--jira-border)">@issues.Count</span>
             </div>
 
-            @foreach (var issue in issues)
-            {
-                <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
-                   class="text-decoration-none text-body d-block mb-2">
-                    <div class="issue-card bg-body rounded-3 p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted" style="font-size:11px">@Model.Key-@issue.IssueNumber</span>
-                            <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
-                        </div>
-                        <p class="mb-2 fw-medium lh-sm" style="font-size:13px">@issue.Title</p>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="type-badge type-@issue.Type.ToString().ToLower()">@typeIcons[issue.Type] @issue.Type</span>
-                            <div class="ms-auto d-flex align-items-center gap-1">
-                                @if (issue.DueDate.HasValue)
-                                {
-                                    var overdue = issue.DueDate < DateTime.UtcNow && issue.Status != IssueStatus.Done;
-                                    <span style="font-size:11px" class="@(overdue ? "text-danger fw-semibold" : "text-muted")">
-                                        @issue.DueDate.Value.ToString("MMM d")
-                                    </span>
-                                }
-                                @if (issue.Assignee != null)
-                                {
-                                    <span class="avatar-circle" title="@issue.Assignee.UserName">
-                                        @(issue.Assignee.UserName![0].ToString().ToUpper())
-                                    </span>
-                                }
+            <div class="drop-zone" data-status-num="@statusNum">
+                @foreach (var issue in issues)
+                {
+                    <div class="issue-card-wrapper mb-2"
+                         draggable="true"
+                         data-issue-id="@issue.Id"
+                         data-status-num="@statusNum"
+                         data-priority="@issue.Priority"
+                         data-type="@issue.Type"
+                         data-title="@issue.Title.ToLower()">
+                        <a asp-controller="Issues" asp-action="Details" asp-route-id="@issue.Id"
+                           class="text-decoration-none d-block" style="color:inherit">
+                            <div class="issue-card rounded-3 p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span style="font-size:11px;color:var(--jira-text-muted)">@Model.Key-@issue.IssueNumber</span>
+                                    <span class="badge bg-@priorityColors[issue.Priority]" style="font-size:10px">@issue.Priority</span>
+                                </div>
+                                <p class="mb-2 fw-medium lh-sm" style="font-size:13px;color:var(--jira-text)">@issue.Title</p>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="type-badge type-@issue.Type.ToString().ToLower()">@typeIcons[issue.Type] @issue.Type</span>
+                                    <div class="ms-auto d-flex align-items-center gap-1">
+                                        @if (issue.DueDate.HasValue)
+                                        {
+                                            var overdue = issue.DueDate < DateTime.UtcNow && issue.Status != IssueStatus.Done;
+                                            <span style="font-size:11px" class="@(overdue ? "text-danger fw-semibold" : "")">
+                                                @if (!overdue) { <span style="color:var(--jira-text-muted)"> </span> }
+                                                @issue.DueDate.Value.ToString("MMM d")
+                                            </span>
+                                        }
+                                        @if (issue.Assignee != null)
+                                        {
+                                            <span class="avatar-circle" title="@issue.Assignee.UserName">
+                                                @(issue.Assignee.UserName![0].ToString().ToUpper())
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                </a>
-            }
+                }
 
-            <a asp-controller="Issues" asp-action="Create" asp-route-projectId="@Model.Id"
-               class="add-issue-btn d-block text-center text-muted text-decoration-none rounded-2 py-2 mt-1 small">
-                + Add issue
-            </a>
+                <a asp-controller="Issues" asp-action="Create" asp-route-projectId="@Model.Id"
+                   class="add-issue-btn d-block text-center text-decoration-none rounded-2 py-2 mt-1 small"
+                   style="color:var(--jira-text-muted)">
+                    + Ajouter un ticket
+                </a>
+            </div>
         </div>
     }
 </div>
